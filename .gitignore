@@ -1,0 +1,20 @@
+# AWS SAM build output
+.aws-sam/
+
+# 環境変数ファイル
+env.json
+
+# SAM テンプレート
+template.yaml
+
+# IDE
+.vscode/
+.idea/
+
+# Pythonキャッシュ
+__pycache__/
+*.pyc
+
+# OS一時ファイル
+.DS_Store
+Thumbs.db
