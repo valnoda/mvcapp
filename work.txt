@@ -84,7 +84,7 @@ find ./ -name "*.py" -exec sh -c 'cp "$0" "${0%.py}.py.txt"' {} \;
 ■ リンクページ作成
 cd /c/Users/ユーザー名/Documents/dockerTest/mvcappTXT
 
-find ./ -name "*.py.txt" ! -path "./.aws-sam/*" | while read path; do
+find ./ -name "*.txt" ! -path "./.aws-sam/*" | while read path; do
   url_path="${path#./}"
   echo "<a href=\"https://mvcapp.pages.dev/$url_path\">$url_path</a><br>"
 done > index.html
