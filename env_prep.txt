@@ -1,3 +1,15 @@
+■ テキストファイルへの変換
+cd /c/Users/ユーザー名/Documents/dockerTest/mvcappTXT
+find ./ -name "*.py" -exec sh -c 'cp "$0" "${0%.py}.py.txt"' {} \;
+
+■ リンクページ作成
+cd /c/Users/ユーザー名/Documents/dockerTest/mvcappTXT
+
+find ./ -name "*.txt" ! -path "./.aws-sam/*" | while read path; do
+  url_path="${path#./}"
+  echo "<a href=\"https://mvcapp.pages.dev/$url_path\">$url_path</a><br>"
+done > index.html
+
 ■ dockeプロジェクト作成
 １）管理者権限でPowerShellを起動
 
@@ -77,14 +89,3 @@ cd プロジェクトルートディレクトリ\
 sam build
 --------------------------------------------------
 
-■ テキストファイルへの変換
-cd /c/Users/ユーザー名/Documents/dockerTest/mvcappTXT
-find ./ -name "*.py" -exec sh -c 'cp "$0" "${0%.py}.py.txt"' {} \;
-
-■ リンクページ作成
-cd /c/Users/ユーザー名/Documents/dockerTest/mvcappTXT
-
-find ./ -name "*.txt" ! -path "./.aws-sam/*" | while read path; do
-  url_path="${path#./}"
-  echo "<a href=\"https://mvcapp.pages.dev/$url_path\">$url_path</a><br>"
-done > index.html
