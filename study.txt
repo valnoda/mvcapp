@@ -9,13 +9,70 @@ open()	ファイルの行ごとの読み出し
 
 ■■■ 便利 ■■■
 ■ 文字列の中に {変数} を書く
+--------------------------------------------------
 x = 10
 print(f"x = {x}")  # → "x = 10"
 
 以下のように引数でも使える
 number = 123;
 pdate_user_email(number, f'test@test.com{number}')
+--------------------------------------------------
 
+■ タプルのアンパック
+--------------------------------------------------
+x, y = 10, 20  # ← 実はタプルのアンパック
+print(x)  # 10
+print(y)  # 20
+--------------------------------------------------
+
+■ Enum仕様例
+--------------------------------------------------
+    # 通常のEnum
+    class EnumStatus1(Enum):
+        XXXXX1 = 1
+        XXXXX2 = 2
+        XXXXX3 = 3
+        XXXXX4 = 4
+
+    for status in EnumStatus1:
+        print(f'### EnumStatus1.{status.name}.name ###:{status.name}')
+        print(f'### EnumStatus1.{status.name}.value ###:{status.value}')
+
+    # Enum にラベルを埋め込む
+    class EnumStatus2(Enum):
+        XXXXX1 = (1, '保留中')
+        XXXXX2 = (2, '実行中')
+        XXXXX3 = (3, '成功')
+        XXXXX4 = (4, '失敗')
+
+        def __init__(self, value, label): #Enumの仕様で(1, '保留中')などのタプルが渡される
+            self._value_ = value
+            self.label = label
+
+    for status in EnumStatus2:
+        print(f'### EnumStatus2.{status.name}.name ###:{status.name}')
+        print(f'### EnumStatus2.{status.name}.value ###:{status.value}')
+        print(f'### EnumStatus2.{status.name}.label ###:{status.label}')
+
+    # Enum + ラベル辞書
+    class EnumStatus3(Enum):
+        XXXXX1 = 1
+        XXXXX2 = 2
+        XXXXX3 = 3
+        XXXXX4 = 4
+
+    STATUS_LABELS = {
+        EnumStatus3.XXXXX1: '保留中',
+        EnumStatus3.XXXXX2: '実行中',
+        EnumStatus3.XXXXX3: '成功',
+        EnumStatus3.XXXXX4: '失敗',
+    }
+
+    for status in EnumStatus3:
+        print(f'### EnumStatus3.{status.name}.name ###:{status.name}')
+        print(f'### EnumStatus3.{status.name}.value ###:{status.value}')
+        print(f'### EnumStatus4.{status.name}.label ###:{STATUS_LABELS[status]}')
+--------------------------------------------------
 
 ■ iter(list)
 イテラブル（リストなど）からイテレータを作成する。
@@ -164,8 +221,13 @@ if not fruits:
 ■ tuple（タプル）
 （作成）
 --------------------------------------------------
-position = (35.6895, 139.6917)
+position = (35.6895, 139.6917) ★（重要）タプルはカンマ区切りで作られる（丸括弧は関係ない）
 --------------------------------------------------
+
+例）
+1, → タプル
+(1,) → より明示的なタプル（推奨）
+(1) → タプルじゃない（ただの整数）
 
 （添え字でアクセス ※0から始まる）
 --------------------------------------------------

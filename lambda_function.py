@@ -4,17 +4,8 @@ from app.exceptions.custom_exceptions import ValidationError
 from app.utils.common import to_json
 import copy
 
-import os
-
 def lambda_handler(event, context):
     try:
-
-
-        print("========= 環境変数チェック =========")
-        print("DB_HOST:", os.environ.get("DB_HOST"))
-        print("DB_USER:", os.environ.get("DB_USER"))
-        print("===================================")
-
         controller = SampleController(context)
 
         # ログ：リクエスト（マスク処理を挟んでもよい）
