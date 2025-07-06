@@ -1,0 +1,180 @@
+■ ドメイン
+そのアプリケーションが解決しようとしている現実世界の問題領域
+（ECサイトの場合）
+　・商品管理
+　・注文
+　・在庫管理
+　・顧客対応
+
+■ コンテキスト
+「この業務（機能）の中では、こういう意味でこの単語・モデル・処理を使う」という
+“まとまり”や“ルールの枠”を明確に分けるもの
+
+（注意点）
+同じ「エンティティ」や「バリューオブジェクト」で異なるコンテキストであれば、別に作成しなけらばいけない。
+同じ「ユースケース」を異なるコンテキスト間で利用することは出来るが、共通利用コンテキストの「ユースケース」として
+別ディレクトリにするなど対策が必要
+
+例）
+app/
+├── context_a/ ★コンテキストA
+│   ├── entities.py        # EntityA
+│   └── services.py        # A専用のアプリケーション層
+├── context_b/ ★コンテキストB
+│   ├── entities.py        # EntityB
+│   └── services.py        # B専用のアプリケーション層
+├── shared/ ★共通用コンテキスト
+│   └── usecases/
+│       └── calc_discount.py   # ✅ 共通ユースケース
+
+
+■ エンティティ ※識別子を持つインスタンス
+・識別子（IDなど）をもつ
+・属性値（名前、金額など）をもつ
+・メソッドをもつ
+・識別子（IDなど）が異なるインスタンスはことなるエンティティとなるメソッド（__eq__）をもつ
+・識別子（IDなど）が同じインスタンスであれば、その他の属性値（プロパティ）が異なっていても同じオブジェクトとなるメソッド（__eq__）をもつ
+・原則として識別子は不変（インスタンス時に一度だけセット）
+・属性値は変更可能
+
+
+■ バリューオブジェクト ※識別子を持たないインスタンス
+・識別子（IDなど）を持たない
+・属性値（都道府県、町など）をもつ
+・メソッドをもつ
+・すべての属性値が一致すれば同じオブジェクトとなるメソッド（__eq__）をもつ
+・原則として属性値は変更不可
+
+
+■ 集合
+属性の値としてListなど複数のエンティティを格納している「エンティティ または バリューオブジェクト」
+
+
+■ エンティティ間の関連
+エンティティ同士の関連・関係性の定義
+・IDで結びつけ
+・オブジェクトで参照
+
+（1対多の例）
+　一人のユーザー ←→ 複数の注文
+
+（多対1の令枝）
+　複数注文 → 1人のユーザー
+
+（多対多）
+　複数注文 ←→ 複数商品 ※中間エンティティを作るのが一般的
+
+
+■ リポジトリ
+　エンティティの永続化・取得を行うインターフェース
+
+■ サービス
+　ドメインに属しない処理をまとめる（例：割引計算など）
+
+
+
+
+
+✅ リポジトリ（Repository）
+■ 概要
+「エンティティや集約を、永続化（保存・取得）する役割をもつインターフェース」
+→ つまり、「DBアクセスの窓口」と考えてください。
+
+■ 目的
+アプリケーションやドメイン層から、永続化の仕組み（DB, ORM）を隠蔽する
+
+クライアント（ユースケース）側からは、あたかもインメモリのコレクションを扱うように見せる
+
+■ よくあるメソッド構成
+python
+コピーする
+編集する
+class OrderRepository:
+    def save(self, order: Order): ...
+    def find_by_id(self, order_id: int) -> Optional[Order]: ...
+    def delete(self, order_id: int): ...
+✅ 実装例（FastAPI + SQLAlchemy）
+python
+コピーする
+編集する
+# domain/repositories/order_repository.py
+from abc import ABC, abstractmethod
+from domain.entities import Order
+
+class OrderRepository(ABC):
+    @abstractmethod
+    def save(self, order: Order):
+        pass
+
+    @abstractmethod
+    def find_by_id(self, order_id: int) -> Order:
+        pass
+python
+コピーする
+編集する
+# infrastructure/repositories/sqlalchemy_order_repository.py
+from domain.repositories.order_repository import OrderRepository
+
+class SQLAlchemyOrderRepository(OrderRepository):
+    def __init__(self, db_session):
+        self.db = db_session
+
+    def save(self, order: Order):
+        self.db.add(order)
+        self.db.commit()
+
+    def find_by_id(self, order_id: int) -> Order:
+        return self.db.query(Order).get(order_id)
+→ 使う側は OrderRepository のインターフェースだけを意識すればよく、インフラ技術を隠せます。
+
+✅ サービス（Service）
+■ 概要
+「エンティティやバリューオブジェクトに属さないが、重要な業務処理を担うドメインの一部」
+
+■ 目的
+ある機能が「1つのエンティティや値オブジェクトには属さない」とき、それを中立的な場所に切り出す
+
+または、複数のオブジェクトにまたがるロジックをまとめる
+
+■ 典型例
+割引計算（顧客の状態・商品・クーポンにまたがる）
+
+請求額の合算
+
+配送コストの見積もり
+
+✅ 実装例（割引計算）
+python
+コピーする
+編集する
+# domain/services/discount_service.py
+
+class DiscountService:
+    def calculate_discount(self, customer, items) -> int:
+        if customer.is_premium():
+            return int(sum(item.price for item in items) * 0.1)
+        return 0
+→ 「割引計算」は、CustomerやOrderItemに属してもよさそうですが、複数にまたがるため独立させるのがDDD的です。
+
+✅ リポジトリとサービスの違いまとめ
+項目	リポジトリ	サービス
+主な責務	エンティティや集約の保存・取得	ドメインロジックを実装（特にエンティティに属さないもの）
+関心	インフラストレージとの接続	ビジネスルールの実装
+例	save(order), find_by_id()	calculate_discount(), generate_invoice()
+クラス構成	通常は インターフェース＋実装クラス	単一のサービスクラスでOK
+属する層	インフラ層 or ドメイン層（抽象化が鍵）	ドメイン層（業務ルールとしての処理）
+
+✅ どちらもDDDで重要なパターン
+リポジトリ → 永続化の責務を明示的に分離するため
+
+サービス → 責務が曖昧な処理を整理・独立させるため
+
+この2つをうまく使い分けることで、DDDの「意図が明確な設計」が実現できます。
+
+必要であれば：
+
+「ドメインサービス」と「アプリケーションサービス」の違い
+
+FastAPIでのリポジトリのDI（依存性注入）実装例
+
+なども詳しくご案内できます！
